@@ -51,11 +51,9 @@ def upload():
 
         # If the user chose to view the first 10 rows
         elif action == 'show':
-            # Get the first 10 rows of the combined DataFrame
-            first_10_rows = df_combined.head(10)
 
             # Convert the DataFrame rows to a list of dictionaries (for easy rendering in Jinja2)
-            table_data = first_10_rows.to_dict(orient='records')
+            table_data = df_combined.to_dict(orient='records')
 
             # Pass the table data and columns to the template
             return render_template('show_data.html', columns=df_combined.columns, rows=table_data)
