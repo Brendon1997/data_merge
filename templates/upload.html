@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block head %}
+    <title>Upload</title>
+{% endblock %}
+
+{% block body %}
+    <div class="center">
+        <h3>Please upload your excel files to merge</h3>
+        <form action="/upload" method="POST" enctype="multipart/form-data">
+            <label for="first_file"> First file</label>
+            <input type="file" name="first_file" accept=".xlsx" required>
+            <label for="second_file"> Second file</label>
+            <input type="file" name="second_file" accept=".xlsx" required>
+            <br><br>
+
+            <label>
+                <input type="radio" name="action" value="download" checked>
+                Download Excel File
+            </label>
+            <label>
+                <input type="radio" name="action" value="show">
+                Show Content
+            </label>
+            <br><br>
+
+            <input type="submit" value="Upload">
+            <button type="reset">Clear</button>
+        </form>
+    </div>
+{% endblock %}
