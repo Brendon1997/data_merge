@@ -4,6 +4,13 @@ import pandas as pd
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
 from openpyxl.utils import get_column_letter
+from constants import (
+    CONFIRMED, TOTAL, UNMARRIED, MEDICAL_STATE, SICK, HOSPITALIZED, UNKNOWN, SIGNS_OBSERVED, ICD_9_DIAGNOSIS,
+    VACCINATED_FOR_FLU, VACCINATED_FOR_PNEUMOCOCCUS, SUSPECTED, POSSIBLE
+)
+
+from utils import create_data_row
+from openpyxl.styles import Border, Side
 
 app = Flask(__name__)
 
@@ -21,21 +28,6 @@ def identify_csv_file(file):
         return 'df3', df
     else:
         raise ValueError("Unrecognized CSV structure")
-
-
-CONFIRMED = 'TE KONFIRMUARA'
-SUSPECTED = 'TE DYSHUAR/NEN HETIM'
-POSSIBLE = 'MUNDSHEM'
-TOTAL = 'NR. TOTAL'
-MEDICAL_STATE = 'GJENDJA SHENDETESORE'
-SICK = 'I PASHERUAR'
-UNMARRIED = 'JO MARTUAR'
-HOSPITALIZED = 'SHTRIM NE SPITAL'
-UNKNOWN = 'E PANJOHUR'
-SIGNS_OBSERVED = 'SHENJA TE OBSERVUARA'
-ICD_9_DIAGNOSIS = 'ICD9 (Semundje bashkeshoqeruese sipas diagnozave icd9)'
-VACCINATED_FOR_FLU = 'VAKSINUAR PER GRIPIN'
-VACCINATED_FOR_PNEUMOCOCCUS = 'VAKSINUAR PER PNEUMOKOK'
 
 
 def map_data_from_all_csvs(df1, df2, df3):
@@ -83,7 +75,6 @@ def map_data_from_all_csvs(df1, df2, df3):
             ICD_9_DIAGNOSIS: {
                 'PO': df2['icd9konfirmuarpo'].sum(),
                 'JO': df2['icd9konfirmuarjo'].sum(),
-                UNKNOWN: 0,  # Placeholder for unknown values
             },
             VACCINATED_FOR_FLU: {
                 'PO': df1['totvaksinuargrippokonfirmuar'].sum(),
@@ -239,15 +230,24 @@ def write_mapped_data_to_excel(mapped_data, output_path):
         + ["PO", "JO", "PANJOHUR"] * 2
     ]
 
+    # Define a border style
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+
     # Adding the header
     for row in header:
         ws.append(row)
 
     # Apply styling (bold headers, center alignment, etc.)
-    for row in ws.iter_rows(min_row=1, max_row=2, min_col=1, max_col=len(header[0])):
+    for row in ws.iter_rows(min_row=1, max_row=3, min_col=1, max_col=len(header[0])):
         for cell in row:
             cell.font = Font(bold=True)
             cell.alignment = Alignment(horizontal='center', vertical='center')
+            cell.border = thin_border
 
     # Merge cells to match the structure
     ws.merge_cells('A1:A3')  # COVID-19 Cases
@@ -269,50 +269,6 @@ def write_mapped_data_to_excel(mapped_data, output_path):
     ws.merge_cells('M2:N2')  # 0-1 years
     ws.merge_cells('O2:P2')  # 0-1 years
 
-    # Adding three rows with "CONFIRMED", "Suspected", and "Possible"
-    def create_data_row(case_type, mapped_data):
-        return [
-            case_type,
-            mapped_data[case_type][TOTAL],
-            mapped_data[case_type]["GJINIA"]['MESHKUJ'],
-            mapped_data[case_type]["GJINIA"]['FEMRA'],
-            mapped_data[case_type]['MOSHA']['0-1']['MESHKUJ'],
-            mapped_data[case_type]['MOSHA']['0-1']['FEMRA'],
-            mapped_data[case_type]['MOSHA']['1-18']['MESHKUJ'],
-            mapped_data[case_type]['MOSHA']['1-18']['FEMRA'],
-            mapped_data[case_type]['MOSHA']['19-25']['MESHKUJ'],
-            mapped_data[case_type]['MOSHA']['19-25']['FEMRA'],
-            mapped_data[case_type]['MOSHA']['26-34']['MESHKUJ'],
-            mapped_data[case_type]['MOSHA']['26-34']['FEMRA'],
-            mapped_data[case_type]['MOSHA']['35-70']['MESHKUJ'],
-            mapped_data[case_type]['MOSHA']['35-70']['FEMRA'],
-            mapped_data[case_type]['MOSHA']['>70']['MESHKUJ'],
-            mapped_data[case_type]['MOSHA']['>70']['FEMRA'],
-            mapped_data[case_type]['STATUSI']['MARTUAR'],
-            mapped_data[case_type]['STATUSI'][UNMARRIED],
-            mapped_data[case_type][MEDICAL_STATE]['SHERUAR'],
-            mapped_data[case_type][MEDICAL_STATE][SICK],
-            mapped_data[case_type][MEDICAL_STATE]['VDEKUR'],
-            mapped_data[case_type][MEDICAL_STATE]['PANJOHUR'],
-            mapped_data[case_type][HOSPITALIZED]['PO'],
-            mapped_data[case_type][HOSPITALIZED]['JO'],
-            mapped_data[case_type][HOSPITALIZED][UNKNOWN],
-            mapped_data[case_type]['SIMPTOMA']['PO'],
-            mapped_data[case_type]['SIMPTOMA']['JO'],
-            mapped_data[case_type]['SIMPTOMA'][UNKNOWN],
-            mapped_data[case_type][SIGNS_OBSERVED]['PO'],
-            mapped_data[case_type][SIGNS_OBSERVED]['JO'],
-            mapped_data[case_type][SIGNS_OBSERVED][UNKNOWN],
-            mapped_data[case_type][ICD_9_DIAGNOSIS]['PO'],
-            mapped_data[case_type][ICD_9_DIAGNOSIS]['JO'],
-            mapped_data[case_type][VACCINATED_FOR_FLU]['PO'],
-            mapped_data[case_type][VACCINATED_FOR_FLU]['JO'],
-            mapped_data[case_type][VACCINATED_FOR_FLU][UNKNOWN],
-            mapped_data[case_type][VACCINATED_FOR_PNEUMOCOCCUS]['PO'],
-            mapped_data[case_type][VACCINATED_FOR_PNEUMOCOCCUS]['JO'],
-            mapped_data[case_type][VACCINATED_FOR_PNEUMOCOCCUS][UNKNOWN],
-        ]
-
     # Create the data rows for CONFIRMED, SUSPECTED, and POSSIBLE cases
     data_rows = [
         create_data_row(CONFIRMED, mapped_data),
@@ -323,6 +279,11 @@ def write_mapped_data_to_excel(mapped_data, output_path):
     # Add the data rows to the worksheet
     for row in data_rows:
         ws.append(row)
+
+    # Apply styling (bold headers, center alignment, etc.)
+    for row in ws.iter_rows(min_row=4, max_row=6, min_col=1, max_col=len(header[0])):
+        for cell in row:
+            cell.border = thin_border
 
     # Save the workbook
     wb.save(output_path)
