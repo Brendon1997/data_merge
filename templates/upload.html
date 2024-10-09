@@ -6,12 +6,14 @@
 
 {% block body %}
     <div class="center">
-        <h3>Please upload your excel files to merge</h3>
+        <h3>Please upload your CSV files to merge</h3>
         <form action="/upload" method="POST" enctype="multipart/form-data">
             <label for="first_file"> First file</label>
-            <input type="file" name="first_file" accept=".xlsx" required>
+            <input type="file" name="first_file" accept=".csv" required>
             <label for="second_file"> Second file</label>
-            <input type="file" name="second_file" accept=".xlsx" required>
+            <input type="file" name="second_file" accept=".csv" required>
+            <label for="third_file"> Third file</label>
+            <input type="file" name="third_file" accept=".csv" required>
             <br><br>
 
             <label>
