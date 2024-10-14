@@ -395,7 +395,7 @@ def upload():
     df3 = file_mapping.get('df3')
 
     if df1 is None or df2 is None or df3 is None:
-        return "Ensure all three files are uploaded correctly."
+        return "Ensure you have uploaded all 3 different csv files."
 
     # Proceed with processing the files
     mapped_data = map_data_from_all_csvs(df1, df2, df3)
