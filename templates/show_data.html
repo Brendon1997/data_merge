@@ -1,39 +1,28 @@
-{% block head %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
     <meta charset="UTF-8">
-    <title>First 10 Rows</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processed Data</title>
     <style>
         table {
             border-collapse: collapse;
             width: 100%;
         }
-        table, th, td {
-            border: 1px solid black;
-        }
         th, td {
+            border: 1px solid black;
             padding: 8px;
-            text-align: left;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
         }
     </style>
-{% endblock %}
-{% block body %}
+</head>
+<body>
 
-    <h1>First 10 Rows of Combined DataFrame</h1>
-    <table>
-        <thead>
-            <tr>
-                {% for column in columns %}
-                <th>{{ column }}</th>
-                {% endfor %}
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in rows %}
-            <tr>
-                {% for column in columns %}
-                <td>{{ row[column] }}</td>
-                {% endfor %}
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-{% endblock %}
+    <h1>Processed Data Table</h1>
+    {{ table_data|safe }}
+
+</body>
+</html>

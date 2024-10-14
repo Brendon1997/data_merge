@@ -214,18 +214,20 @@ def write_mapped_data_to_excel(mapped_data, output_path):
         col_letter = get_column_letter(i)  # Convert index to column letter (A, B, C, ..., Z, AA, AB, ...)
         ws.column_dimensions[col_letter].width = width
 
-    # Manually setting up the header based on the structure you provided
+    # Manually setting up the header
     header = [
+        # First row headers
         ["RASTET COVID-19", "NR TOTAL", "GJINIA", "", "MOSHA", "", "", "", "", "", "", "", "", "", "", "",
          "STATUSI", "", "GJENDJA SHENDETESORE", "", "", "", "SHTRIM NE SPITAL", "", "", "SIMPTOMA", "", "",
          "SHENJA TE OBSERVUARA", "", "", "Semundje bashkeshoqeruese sipas diagnozave icd9", "", "VAKSINUAR PER GRIPIN",
          "", "", "VAKSINUAR PER PNEUMOKOK", "", ""
          ],
+        # Second row headers
         ["", "", "", "", "0-1 years", "", "1-18 years", "", "19-25 years", "", "26-34 years", "", "35-70 years",
          "", ">70 years", ] + [""] * 23,
-
+        # Third row headers
         ["", "", ] + ["MESHKUJ", "FEMRA"] * 7
-        + ["MARTUAR", "JO MARTUAR", "SHERUAR", "I PASHERUAR","VDEKUR", "PANJOHUR"] + ["PO", "JO", "E PANJOHUR", ] * 3
+        + ["MARTUAR", "JO MARTUAR", "SHERUAR", "I PASHERUAR", "VDEKUR", "PANJOHUR"] + ["PO", "JO", UNKNOWN, ] * 3
         + ["PO", "JO"]
         + ["PO", "JO", "PANJOHUR"] * 2
     ]
@@ -291,19 +293,71 @@ def write_mapped_data_to_excel(mapped_data, output_path):
 
 
 def generate_html_table(mapped_data):
-    """Function to generate an HTML table from the mapped data."""
-    html_content = "<table border='1'>"
-    html_content += "<tr><th>Category</th><th>Subcategory</th><th>Value</th></tr>"
+    """Function to generate an HTML table from the mapped data, with merged cells like in Excel."""
 
-    for category, subcategories in mapped_data.items():
-        for subcategory, value in subcategories.items():
-            if isinstance(value, dict):
-                for sub_subcategory, sub_value in value.items():
-                    html_content += f"<tr><td>{category}</td><td>{sub_subcategory}</td><td>{sub_value}</td></tr>"
+    # Define the header structure, with merged cells
+    header_rows = [
+        # Row 1: Top-level headers with merged cells
+        [
+            ('RASTET COVID-19', 1, 3),  # (content, colspan, rowspan)
+            ('NR TOTAL', 1, 3),
+            ('GJINIA', 2, 2),
+            ('MOSHA', 12, 1),
+            ('STATUSI', 2, 1),
+            ('GJENDJA SHENDETESORE', 4, 1),
+            ('SHTRIM NE SPITAL', 3, 1),
+            ('SIMPTOMA', 3, 1),
+            ('SHENJA TE OBSERVUARA', 3, 1),
+            ('Semundje bashkeshoqeruese sipas diagnozave icd9', 2, 1),
+            ('VAKSINUAR PER GRIPIN', 3, 1),
+            ('VAKSINUAR PER PNEUMOKOK', 3, 1)
+        ],
+        # Row 2: Sub-headers
+        [
+            ('0-1 years', 2, 1), ('1-18 years', 2, 1), ('19-25 years', 2, 1),
+            ('26-34 years', 2, 1), ('35-70 years', 2, 1), ('>70 years', 2, 1),
+            *[('', 1, 1)] * 23,  # Preceding * to unpack and flatten
+        ],
+        # Row 3 subheaders
+        [
+            *[("MESHKUJ", 1, 1), ("FEMRA", 1, 1)] * 7,  # The preceding * unpacks and flattens
+            ("MARTUAR", 1, 1), ("JO MARTUAR", 1, 1),
+            ("SHERUAR", 1, 1), ("I PASHERUAR", 1, 1), ("VDEKUR", 1, 1), ("PANJOHUR", 1, 1),
+            *[("PO", 1, 1), ("JO", 1, 1), (UNKNOWN, 1, 1)] * 3,
+            ("PO", 1, 1), ("JO", 1, 1),
+            *[("PO", 1, 1), ("JO", 1, 1), (UNKNOWN, 1, 1)] * 2,
+        ]
+    ]
+
+    # Start HTML table
+    html_content = "<table border='1'>"
+
+    # Render the header rows with merged cells using colspan and rowspan
+    for header_row in header_rows:
+        html_content += "<tr>"
+        for cell, colspan, rowspan in header_row:
+            if colspan > 1 or rowspan > 1:
+                html_content += f"<th colspan='{colspan}' rowspan='{rowspan}'>{cell}</th>"
             else:
-                html_content += f"<tr><td>{category}</td><td>{subcategory}</td><td>{value}</td></tr>"
+                html_content += f"<th>{cell}</th>"
+        html_content += "</tr>"
+
+    # Create the data rows for CONFIRMED, SUSPECTED, and POSSIBLE cases
+    data_rows = [
+        create_data_row(CONFIRMED, mapped_data),
+        create_data_row(SUSPECTED, mapped_data),
+        create_data_row(POSSIBLE, mapped_data)
+    ]
+
+    # Render the data rows
+    for row in data_rows:
+        html_content += "<tr>"
+        for cell in row:
+            html_content += f"<td>{cell}</td>"
+        html_content += "</tr>"
 
     html_content += "</table>"
+
     return html_content
 
 
@@ -363,4 +417,4 @@ def upload():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
